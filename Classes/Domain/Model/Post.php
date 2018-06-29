@@ -1,548 +1,672 @@
 <?php
+
 namespace AgoraTeam\Agora\Domain\Model;
 
-	/***************************************************************
-	 *  Copyright notice
-	 *  (c) 2015 Philipp Thiele <philipp.thiele@phth.de>
-	 *           Björn Christopher Bresser <bjoern.bresser@gmail.com>
-	 *  All rights reserved
-	 *  This script is part of the TYPO3 project. The TYPO3 project is
-	 *  free software; you can redistribute it and/or modify
-	 *  it under the terms of the GNU General Public License as published by
-	 *  the Free Software Foundation; either version 3 of the License, or
-	 *  (at your option) any later version.
-	 *  The GNU General Public License can be found at
-	 *  http://www.gnu.org/copyleft/gpl.html.
-	 *  This script is distributed in the hope that it will be useful,
-	 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-	 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	 *  GNU General Public License for more details.
-	 *  This copyright notice MUST APPEAR in all copies of the script!
-	 ***************************************************************/
+/***************************************************************
+ *  Copyright notice
+ *  (c) 2015 Philipp Thiele <philipp.thiele@phth.de>
+ *           Björn Christopher Bresser <bjoern.bresser@gmail.com>
+ *  All rights reserved
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 3 of the License, or
+ *  (at your option) any later version.
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+use AgoraTeam\Agora\Service\Authentication\AuthenticationService;
 
 /**
  * Class Post
  *
  * @package AgoraTeam\Agora\Domain\Model
  */
-class Post extends Entity {
+class Post extends Entity implements AccessibleInterface, NotifiableInterface
+{
 
-	/**
-	 * Topic
-	 *
-	 * @var string
-	 */
-	protected $topic = '';
+    /**
+     * Topic
+     *
+     * @var string
+     */
+    protected $topic = '';
 
-	/**
-	 * Text
-	 *
-	 * @var string
-	 */
-	protected $text = '';
+    /**
+     * Text
+     *
+     * @var string
+     * @validate NotEmpty
+     */
+    protected $text = '';
 
-	/**
-	 * PublishingDate
-	 *
-	 * @var \DateTime
-	 */
-	protected $publishingDate;
+    /**
+     * PublishingDate
+     *
+     * @var \DateTime
+     */
+    protected $publishingDate;
 
-	/**
-	 * QuotedPost
-	 *
-	 * @var \AgoraTeam\Agora\Domain\Model\Post
-	 * @lazy
-	 */
-	protected $quotedPost = NULL;
+    /**
+     * QuotedPost
+     *
+     * @var \AgoraTeam\Agora\Domain\Model\Post
+     */
+    protected $quotedPost = null;
 
-	/**
-	 * OriginalPost
-	 *
-	 * @var \AgoraTeam\Agora\Domain\Model\Post
-	 * @lazy
-	 */
-	protected $originalPost = NULL;
+    /**
+     * OriginalPost
+     *
+     * @var \AgoraTeam\Agora\Domain\Model\Post
+     * @lazy
+     */
+    protected $originalPost = null;
 
-	/**
-	 * Replies
-	 *
-	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post>
-	 * @lazy
-	 */
-	protected $replies = NULL;
+    /**
+     * Replies
+     *
+     * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post>
+     * @lazy
+     */
+    protected $replies = null;
 
-	/**
-	 * Voting
-	 *
-	 * @var \AgoraTeam\Agora\Domain\Model\Voting
-	 * @lazy
-	 */
-	protected $voting = NULL;
+    /**
+     * Voting
+     *
+     * @var \AgoraTeam\Agora\Domain\Model\Voting
+     * @lazy
+     */
+    protected $voting = null;
 
-	/**
-	 * Attachments
-	 *
-	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Attachment>
-	 * @cascade remove
-	 * @lazy
-	 */
-	protected $attachments = NULL;
+    /**
+     * Attachments
+     *
+     * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Attachment>
+     * @cascade remove
+     * @lazy
+     */
+    protected $attachments = null;
 
-	/**
-	 * Creator
-	 * may be NULL if post is anonymous
-	 *
-	 * @var \AgoraTeam\Agora\Domain\Model\User
-	 * @lazy
-	 */
-	protected $creator = NULL;
+    /**
+     * Creator
+     * may be NULL if post is anonymous
+     *
+     * @var \AgoraTeam\Agora\Domain\Model\User
+     */
+    protected $creator = null;
 
-	/**
-	 * Thread
-	 *
-	 * @var \AgoraTeam\Agora\Domain\Model\Thread
-	 * @lazy
-	 */
-	protected $thread = NULL;
+    /**
+     * Thread
+     *
+     * @var \AgoraTeam\Agora\Domain\Model\Thread
+     * @lazy
+     */
+    protected $thread = null;
 
-	/**
-	 * HistoricalVersions
-	 *
-	 * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post>
-	 * @cascade remove
-	 * @lazy
-	 */
-	protected $historicalVersions = NULL;
+    /**
+     * HistoricalVersions
+     *
+     * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post>
+     * @cascade remove
+     * @lazy
+     */
+    protected $historicalVersions = null;
 
-	/**
-	 * Rootline
-	 *
-	 * @var array
-	 */
-	protected $rootline = array();
+    /**
+     * @var \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Rating>
+     */
+    protected $ratings = null;
 
-	/**
-	 * IsFavorite
-	 *
-	 * @var bool
-	 */
-	protected $isFavorite = FALSE;
+    /**
+     * Rootline
+     *
+     * @var array
+     */
+    protected $rootline = array();
 
-	/**
-	 * Forum
-	 *
-	 * @var \AgoraTeam\Agora\Domain\Model\Forum
-	 * @lazy
-	 */
-	protected $forum = NULL;
+    /**
+     * IsFavorite
+     *
+     * @var bool
+     */
+    protected $isFavorite = false;
 
-	/**
-	 * __construct
-	 */
-	public function __construct() {
-		$this->initStorageObjects();
-	}
+    /**
+     * Forum
+     *
+     * @var \AgoraTeam\Agora\Domain\Model\Forum
+     * @lazy
+     */
+    protected $forum = null;
 
-	/**
-	 * Initializes all ObjectStorage properties
-	 * Do not modify this method!
-	 * It will be rewritten on each save in the extension builder
-	 * You may modify the constructor of this class instead
-	 *
-	 * @return void
-	 */
-	protected function initStorageObjects() {
-		$this->replies = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
-		$this->attachments = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
-		$this->historicalVersions = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
-	}
+    /**
+     * __construct
+     */
+    public function __construct()
+    {
+        $this->initStorageObjects();
+    }
 
-	/**
-	 * Returns the topic
-	 *
-	 * @return string $topic
-	 */
-	public function getTopic() {
-		return $this->topic;
-	}
+    /**
+     * Initializes all ObjectStorage properties
+     * Do not modify this method!
+     * It will be rewritten on each save in the extension builder
+     * You may modify the constructor of this class instead
+     *
+     * @return void
+     */
+    protected function initStorageObjects()
+    {
+        $this->replies = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+        $this->ratings = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+        $this->attachments = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+        $this->historicalVersions = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+    }
 
-	/**
-	 * Sets the topic
-	 *
-	 * @param string $topic
-	 *
-	 * @return void
-	 */
-	public function setTopic($topic) {
-		$this->topic = $topic;
-	}
+    /**
+     * Returns the topic
+     *
+     * @return string $topic
+     */
+    public function getTopic()
+    {
+        return $this->topic;
+    }
 
-	/**
-	 * Returns the text
-	 *
-	 * @return string $text
-	 */
-	public function getText() {
-		return $this->text;
-	}
+    /**
+     * Sets the topic
+     *
+     * @param string $topic
+     * @return void
+     */
+    public function setTopic($topic)
+    {
+        $this->topic = $topic;
+    }
 
-	/**
-	 * Sets the text
-	 *
-	 * @param string $text
-	 *
-	 * @return void
-	 */
-	public function setText($text) {
-		$this->text = $text;
-	}
+    /**
+     * Returns the text
+     *
+     * @return string $text
+     */
+    public function getText()
+    {
+        return $this->text;
+    }
 
-	/**
-	 * Returns the publishingDate
-	 *
-	 * @return \DateTime $publishingDate
-	 */
-	public function getPublishingDate() {
-		if (!$this->publishingDate) {
-			return $this->getCrdate();
-		}
+    /**
+     * Sets the text
+     *
+     * @param string $text
+     * @return void
+     */
+    public function setText($text)
+    {
+        $this->text = $text;
+    }
 
-		return $this->publishingDate;
-	}
+    /**
+     * Returns the publishingDate
+     *
+     * @return \DateTime $publishingDate
+     */
+    public function getPublishingDate()
+    {
+        if (!$this->publishingDate) {
+            return $this->getCrdate();
+        }
 
-	/**
-	 * Sets the publishingDate
-	 *
-	 * @param \DateTime $publishingDate
-	 *
-	 * @return void
-	 */
-	public function setPublishingDate($publishingDate) {
-		$this->publishingDate = $publishingDate;
-	}
+        return $this->publishingDate;
+    }
 
-	/**
-	 * Returns the quotedPost
-	 *
-	 * @return \AgoraTeam\Agora\Domain\Model\Post $quotedPost
-	 */
-	public function getQuotedPost() {
-		return $this->quotedPost;
-	}
+    /**
+     * Sets the publishingDate
+     *
+     * @param \DateTime $publishingDate
+     * @return void
+     */
+    public function setPublishingDate($publishingDate)
+    {
+        $this->publishingDate = $publishingDate;
+    }
 
-	/**
-	 * Sets the quotedPost
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Post $quotedPost
-	 *
-	 * @return void
-	 */
-	public function setQuotedPost(\AgoraTeam\Agora\Domain\Model\Post $quotedPost) {
-		$this->quotedPost = $quotedPost;
-	}
+    /**
+     * Returns the quotedPost
+     *
+     * @return \AgoraTeam\Agora\Domain\Model\Post $quotedPost
+     */
+    public function getQuotedPost()
+    {
+        return $this->quotedPost;
+    }
 
-	/**
-	 * Returns the originalPost
-	 *
-	 * @return \AgoraTeam\Agora\Domain\Model\Post $originalPost
-	 */
-	public function getOriginalPost() {
-		return $this->originalPost;
-	}
+    /**
+     * Sets the quotedPost
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Post $quotedPost
+     * @return void
+     */
+    public function setQuotedPost($quotedPost)
+    {
+        $this->quotedPost = $quotedPost;
+    }
 
-	/**
-	 * Sets the originalPost
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Post $originalPost
-	 *
-	 * @return void
-	 */
-	public function setOriginalPost(\AgoraTeam\Agora\Domain\Model\Post $originalPost) {
-		$this->originalPost = $originalPost;
-	}
+    /**
+     * Returns the originalPost
+     *
+     * @return \AgoraTeam\Agora\Domain\Model\Post $originalPost
+     */
+    public function getOriginalPost()
+    {
+        return $this->originalPost;
+    }
 
-	/**
-	 * Adds a Reply
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Post $reply
-	 *
-	 * @return void
-	 */
-	public function addReply(\AgoraTeam\Agora\Domain\Model\Post $reply) {
-		$this->replies->attach($reply);
-	}
+    /**
+     * Sets the originalPost
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Post $originalPost
+     * @return void
+     */
+    public function setOriginalPost(\AgoraTeam\Agora\Domain\Model\Post $originalPost)
+    {
+        $this->originalPost = $originalPost;
+    }
 
-	/**
-	 * Removes a Reply
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Post $replyToRemove The Reply to be removed
-	 *
-	 * @return void
-	 */
-	public function removeReply(\AgoraTeam\Agora\Domain\Model\Post $replyToRemove) {
-		$this->replies->detach($replyToRemove);
-	}
+    /**
+     * Adds a Reply
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Post $reply
+     * @return void
+     */
+    public function addReply(\AgoraTeam\Agora\Domain\Model\Post $reply)
+    {
+        $this->replies->attach($reply);
+    }
 
-	/**
-	 * Returns the replies
-	 *
-	 * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $replies
-	 */
-	public function getReplies() {
-		return $this->replies;
-	}
+    /**
+     * Removes a Reply
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Post $replyToRemove The Reply to be removed
+     * @return void
+     */
+    public function removeReply(\AgoraTeam\Agora\Domain\Model\Post $replyToRemove)
+    {
+        $this->replies->detach($replyToRemove);
+    }
 
-	/**
-	 * Sets the replies
-	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $replies
-	 *
-	 * @return void
-	 */
-	public function setReplies(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $replies) {
-		$this->replies = $replies;
-	}
+    /**
+     * Returns the replies
+     *
+     * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $replies
+     */
+    public function getReplies()
+    {
+        return $this->replies;
+    }
 
-	/**
-	 * Returns the voting
-	 *
-	 * @return \AgoraTeam\Agora\Domain\Model\Voting $voting
-	 */
-	public function getVoting() {
-		return $this->voting;
-	}
+    /**
+     * Sets the replies
+     *
+     * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $replies
+     * @return void
+     */
+    public function setReplies(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $replies)
+    {
+        $this->replies = $replies;
+    }
 
-	/**
-	 * Sets the voting
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Voting $voting
-	 *
-	 * @return void
-	 */
-	public function setVoting(\AgoraTeam\Agora\Domain\Model\Voting $voting) {
-		$this->voting = $voting;
-	}
+    /**
+     * Returns the voting
+     *
+     * @return \AgoraTeam\Agora\Domain\Model\Voting $voting
+     */
+    public function getVoting()
+    {
+        return $this->voting;
+    }
 
-	/**
-	 * Adds a Attachment
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Attachment $attachment
-	 *
-	 * @return void
-	 */
-	public function addAttachment(\AgoraTeam\Agora\Domain\Model\Attachment $attachment) {
-		$this->attachments->attach($attachment);
-	}
+    /**
+     * Sets the voting
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Voting $voting
+     * @return void
+     */
+    public function setVoting(\AgoraTeam\Agora\Domain\Model\Voting $voting)
+    {
+        $this->voting = $voting;
+    }
 
-	/**
-	 * Removes a Attachment
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Attachment $attachmentToRemove The Attachment to be removed
-	 *
-	 * @return void
-	 */
-	public function removeAttachment(\AgoraTeam\Agora\Domain\Model\Attachment $attachmentToRemove) {
-		$this->attachments->detach($attachmentToRemove);
-	}
+    /**
+     * Adds a Attachment
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Attachment $attachment
+     * @return void
+     */
+    public function addAttachment(\AgoraTeam\Agora\Domain\Model\Attachment $attachment)
+    {
+        $this->attachments->attach($attachment);
+    }
 
-	/**
-	 * Returns the attachments
-	 *
-	 * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Attachment> $attachments
-	 */
-	public function getAttachments() {
-		return $this->attachments;
-	}
+    /**
+     * Removes a Attachment
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Attachment $attachmentToRemove The Attachment to be removed
+     * @return void
+     */
+    public function removeAttachment(\AgoraTeam\Agora\Domain\Model\Attachment $attachmentToRemove)
+    {
+        $this->attachments->detach($attachmentToRemove);
+    }
 
-	/**
-	 * Sets the attachments
-	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Attachment> $attachments
-	 *
-	 * @return void
-	 */
-	public function setAttachments(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $attachments) {
-		$this->attachments = $attachments;
-	}
+    /**
+     * Returns the attachments
+     *
+     * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Attachment> $attachments
+     */
+    public function getAttachments()
+    {
+        return $this->attachments;
+    }
 
-	/**
-	 * Returns the creator
-	 *
-	 * @return mixed $creator
-	 */
-	public function getCreator() {
-		return $this->creator;
-	}
+    /**
+     * Sets the attachments
+     *
+     * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Attachment> $attachments
+     * @return void
+     */
+    public function setAttachments(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $attachments)
+    {
+        $this->attachments = $attachments;
+    }
 
-	/**
-	 * Sets the creator
-	 *
-	 * @param mixed $creator
-	 *
-	 * @return void
-	 */
-	public function setCreator($creator) {
-		$this->creator = $creator;
-	}
+    /**
+     * Returns the creator
+     *
+     * @return mixed $creator
+     */
+    public function getCreator()
+    {
+        return $this->creator;
+    }
 
-	/**
-	 * Returns the thread
-	 *
-	 * @return \AgoraTeam\Agora\Domain\Model\Thread $thread
-	 */
-	public function getThread() {
-		if (is_object($this->thread)) {
-			$thread = $this->thread;
-		} else {
-			$thread = $this->detectThread();
-		}
+    /**
+     * Sets the creator
+     *
+     * @param mixed $creator
+     * @return void
+     */
+    public function setCreator($creator)
+    {
+        $this->creator = $creator;
+    }
 
-		return $thread;
-	}
+    /**
+     * Returns the thread
+     *
+     * @return \AgoraTeam\Agora\Domain\Model\Thread $thread
+     */
+    public function getThread()
+    {
+        if (is_object($this->thread)) {
+            $thread = $this->thread;
+        } else {
+            $thread = $this->detectThread();
+        }
 
-	/**
-	 * Sets the thread
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Thread $thread
-	 *
-	 * @return void
-	 */
-	public function setThread($thread) {
-		$this->thread = $thread;
-	}
+        return $thread;
+    }
 
-	/**
-	 * Adds a Post
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Post $historicalVersion
-	 *
-	 * @return void
-	 */
-	public function addHistoricalVersion(\AgoraTeam\Agora\Domain\Model\Post $historicalVersion) {
-		$this->historicalVersions->attach($historicalVersion);
-	}
+    /**
+     * Sets the thread
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Thread $thread
+     * @return void
+     */
+    public function setThread($thread)
+    {
+        $this->thread = $thread;
+    }
 
-	/**
-	 * Removes a Post
-	 *
-	 * @param \AgoraTeam\Agora\Domain\Model\Post $historicalVersionToRemove The Post to be removed
-	 *
-	 * @return void
-	 */
-	public function removeHistoricalVersion(\AgoraTeam\Agora\Domain\Model\Post $historicalVersionToRemove) {
-		$this->historicalVersions->detach($historicalVersionToRemove);
-	}
+    /**
+     * Adds a Post
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Post $historicalVersion
+     * @return void
+     */
+    public function addHistoricalVersion(\AgoraTeam\Agora\Domain\Model\Post $historicalVersion)
+    {
+        $this->historicalVersions->attach($historicalVersion);
+    }
 
-	/**
-	 * Returns the historicalVersions
-	 *
-	 * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $historicalVersion
-	 */
-	public function getHistoricalVersions() {
-		return $this->historicalVersions;
-	}
+    /**
+     * Removes a Post
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Post $historicalVersionToRemove The Post to be removed
+     * @return void
+     */
+    public function removeHistoricalVersion(\AgoraTeam\Agora\Domain\Model\Post $historicalVersionToRemove)
+    {
+        $this->historicalVersions->detach($historicalVersionToRemove);
+    }
 
-	/**
-	 * Sets the historicalVersions
-	 *
-	 * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $historicalVersions
-	 *
-	 * @return void
-	 */
-	public function setHistoricalVersions(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $historicalVersions) {
-		$this->historicalVersions = $historicalVersions;
-	}
+    /**
+     * Returns the historicalVersions
+     *
+     * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $historicalVersion
+     */
+    public function getHistoricalVersions()
+    {
+        return $this->historicalVersions;
+    }
 
-	/**
-	 * Detects the Thread recursively
-	 *
-	 * @return Thread|bool
-	 */
-	public function detectThread() {
-		$thread = FALSE;
-		if (is_object($this->thread)) {
-			$thread = $this->thread;
-		} else {
-			if (is_object($this->quotedPost)) {
-				$thread = $this->quotedPost->detectThread();
-			}
-		}
+    /**
+     * Sets the historicalVersions
+     *
+     * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $historicalVersions
+     * @return void
+     */
+    public function setHistoricalVersions(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $historicalVersions)
+    {
+        $this->historicalVersions = $historicalVersions;
+    }
 
-		return $thread;
-	}
+    /**
+     * Adds a rating
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Rating $rating
+     * @return void
+     */
+    public function addRating(\AgoraTeam\Agora\Domain\Model\Rating $rating)
+    {
+        $this->ratings->attach($rating);
+    }
 
-	/**
-	 * Returns the rootline
-	 *
-	 * @return array
-	 */
-	public function getRootline() {
-		if (empty($this->rootline)) {
-			$this->fetchNextRootlineLevel();
-		}
+    /**
+     * Removes a rating
+     *
+     * @param \AgoraTeam\Agora\Domain\Model\Rating $replyToRemove The Reply to be removed
+     * @return void
+     */
+    public function removeRating(\AgoraTeam\Agora\Domain\Model\Rating $ratingToRemove)
+    {
+        $this->ratings->detach($ratingToRemove);
+    }
 
-		return $this->rootline;
-	}
+    /**
+     * Returns the ratings
+     *
+     * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $replies
+     */
+    public function getRatings()
+    {
+        return $this->ratings;
+    }
 
-	/**
-	 * Fetches next rootline level recursively
-	 *
-	 * @return void
-	 */
-	public function fetchNextRootlineLevel() {
+    /**
+     * @return int
+     */
+    public function getRatingcount()
+    {
+        return count($this->ratings);
+    }
 
-		if (empty($this->rootline)) {
-			if (is_object($this->getQuotedPost())) {
-				array_push($this->rootline, current($this->getQuotedPost()->getRootline()));
-				array_push($this->rootline, $this);
-			} else {
-				array_push($this->rootline, $this);
-			}
-		}
-	}
+    /**
+     * @param User|null $user
+     * @return bool
+     */
+    public function hasUserRating($user = null)
+    {
+        $result = false;
+        if ($user) {
+            foreach ($this->ratings as $rating) {
+                if (!is_null($rating->getUser())) {
+                    if ($rating->getUser()->getUid() == $user->getUid()) {
+                        $result = true;
+                        continue;
+                    }
+                }
+            }
+        }
+        return $result;
+    }
 
-	/**
-	 * Function isIsFavorite
-	 *
-	 * @return bool
-	 */
-	public function isIsFavorite() {
-		return $this->isFavorite;
-	}
+    /**
+     * Sets the replies
+     *
+     * @param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\AgoraTeam\Agora\Domain\Model\Post> $replies
+     * @return void
+     */
+    public function setRatings(\TYPO3\CMS\Extbase\Persistence\ObjectStorage $ratings)
+    {
+        $this->ratings = $ratings;
+    }
 
-	/**
-	 * Function setIsFavorite
-	 *
-	 * @param bool $isFavorite
-	 *
-	 * @return void
-	 */
-	public function setIsFavorite($isFavorite) {
-		$this->isFavorite = $isFavorite;
-	}
+    /**
+     * Detects the Thread recursively
+     *
+     * @return Thread|bool
+     */
+    public function detectThread()
+    {
+        $thread = false;
+        if (is_object($this->thread)) {
+            $thread = $this->thread;
+        } else {
+            if (is_object($this->quotedPost)) {
+                $thread = $this->quotedPost->detectThread();
+            }
+        }
 
-	/**
-	 * checks if the post is accessible for the given user
-	 *
-	 * @param mixed $user
-	 * @return bool
-	 */
-	public function isAccessibleForUser($user) {
-		return $this->getThread()->isAccessibleForUser($user);
-	}
+        return $thread;
+    }
 
-	/**
-	 * @return Forum
-	 */
-	public function getForum() {
-		return $this->forum;
-	}
+    /**
+     * Returns the rootline
+     *
+     * @return array
+     */
+    public function getRootline()
+    {
+        if (empty($this->rootline)) {
+            $this->fetchNextRootlineLevel();
+        }
 
-	/**
-	 * @param Forum $forum
-	 */
-	public function setForum($forum) {
-		$this->forum = $forum;
-	}
+        return $this->rootline;
+    }
+
+    /**
+     * Fetches next rootline level recursively
+     *
+     * @return void
+     */
+    public function fetchNextRootlineLevel()
+    {
+
+        if (empty($this->rootline)) {
+            if (is_object($this->getQuotedPost())) {
+                array_push($this->rootline, current($this->getQuotedPost()->getRootline()));
+                array_push($this->rootline, $this);
+            } else {
+                array_push($this->rootline, $this);
+            }
+        }
+    }
+
+    /**
+     * Function isIsFavorite
+     *
+     * @return bool
+     */
+    public function isIsFavorite()
+    {
+        return $this->isFavorite;
+    }
+
+    /**
+     * Function setIsFavorite
+     *
+     * @param bool $isFavorite
+     * @return void
+     */
+    public function setIsFavorite($isFavorite)
+    {
+        $this->isFavorite = $isFavorite;
+    }
+
+    /**
+     * @param User|null $user
+     * @param string $accessType
+     * @return bool
+     */
+    public function checkAccess(User $user = null, $accessType = self::TYPE_READ)
+    {
+        switch ($accessType) {
+            case self::TYPE_EDIT_POST:
+            case self::TYPE_DELETE_POST:
+                return $this->checkEditDeletePostAccess($user, $accessType);
+            default:
+                return $this->thread->checkAccess($user, $accessType);
+        }
+    }
+
+    /**
+     * @param User $user
+     * @param $accessType
+     */
+    public function checkEditDeletePostAccess(User $user, $accessType)
+    {
+        if (!is_a($user, User::class)) {
+            return false;
+        } else {
+            $authorUid = ($this->getCreator() ? $this->getCreator()->getUid() : null);
+            $isAuthor = ($user->getUid() === $authorUid);
+            $threadAccess = $this->getThread()->checkAccess($user, $accessType);
+            if ($isAuthor && $threadAccess) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return Forum
+     */
+    public function getForum()
+    {
+        return $this->forum;
+    }
+
+    /**
+     * @param Forum $forum
+     */
+    public function setForum($forum)
+    {
+        $this->forum = $forum;
+    }
 }

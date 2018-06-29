@@ -1,94 +1,169 @@
-config.tx_extbase{
-	persistence{
-		classes{
-			AgoraTeam\Agora\Domain\Model\User {
-				mapping {
-					tableName = fe_users
-					recordType =
-				}
-			}
+config.tx_extbase {
+    persistence {
+        classes {
+            AgoraTeam\Agora\Domain\Model\User {
+                mapping {
+                    tableName = fe_users
+                    recordType =
+                }
+            }
 
-			AgoraTeam\Agora\Domain\Model\Group {
-				mapping {
-					tableName = fe_groups
-					recordType =
-				}
-			}
-
-		}
-	}
+            AgoraTeam\Agora\Domain\Model\Group {
+                mapping {
+                    tableName = fe_groups
+                    recordType =
+                }
+            }
+        }
+    }
 }
 
-
 plugin.tx_agora {
-	view {
-		templateRootPath = {$plugin.tx_agora.view.templateRootPath}
-		partialRootPath = {$plugin.tx_agora.view.partialRootPath}
-		layoutRootPath = {$plugin.tx_agora.view.layoutRootPath}
+    view {
+        templateRootPaths.10 = {$plugin.tx_agora.view.templateRootPath}
+        partialRootPaths.10 = {$plugin.tx_agora.view.partialRootPath}
+        layoutRootPaths.10 = {$plugin.tx_agora.view.layoutRootPath}
         widget {
             TYPO3\CMS\Fluid\ViewHelpers\Widget\PaginateViewHelper {
                 templateRootPath = {$plugin.tx_agora.view.widget.TYPO3\CMS\Fluid\ViewHelpers\Widget\PaginateViewHelper.templateRootPath}
             }
         }
-	}
-	persistence {
-		storagePid = {$plugin.tx_agora.persistence.storagePid}
-	}
-	features {
-		# uncomment the following line to enable the new Property Mapper.
-		# rewrittenPropertyMapper = 1
-	}
+    }
+
+    persistence {
+        storagePid = {$plugin.tx_agora.persistence.storagePid}
+    }
+
+    features {
+        # uncomment the following line to enable the new Property Mapper.
+        # rewrittenPropertyMapper = 1
+    }
+
     settings {
         forum {
-            numberOfItemsInLatestView = 10
+            listPid = {$plugin.tx_agora.listPid}
+            numberOfItemsInLatestView = 5
             numberOfItemsPerPage = 10
-			dateFormat = m.d.y h:i
+            dateFormat = m.d.y h:i
         }
+
         thread {
-            numberOfItemsInLatestView = 10
+            numberOfItemsInLatestView = 5
             numberOfItemsPerPage = 10
-			dateFormat = m-d-y h:i
-			numberOfItemsInObservedThreadsWidget = 5
-            notificationsForThreadOwner = 1
+            dateFormat = m-d-y h:i
+            numberOfItemsInObservedThreadsWidget = 5
             defaultThreadEmailAdress = email_adress@example.de
             defaultThreadEmailUserName = ThreadAdmin
+
+            # change for timeout stored in the sessionData
+            views.delay = 1
+            views.delay.time = 3600
         }
+
         post {
-			numberOfItemsInLatestView = 10
+            numberOfItemsInLatestView = 5
             numberOfItemsPerPage = 10
             dateFormat = m-d-y h:i
             defaultCreatorName = Anonymous
-            notificationsForPostOwner = 1
             defaultPostEmailAdress = email_aress@example.de
             defaultPostEmailUserName = PostAdmin
-			cropLatestsPosts = 100
+            cropLatestsPosts = 100
         }
-		email {
-			templateRootPath = {$plugin.tx_agora.email.templateRootPath}
-			partialRootPath = {$plugin.tx_agora.email.partialRootPath}
-			layoutRootPath = {$plugin.tx_agora.email.layoutRootPath}
-		}
+
+        # Notifications only work with actions and a scheduler
+        notifications {
+            enable = 0
+            notifyPostOwner = 1
+            notifyThreadOwner = 1
+        }
+
+        email {
+            defaultEmailAdress = email_adress@example.de
+            defaultEmailUserName = PostAdmin
+            notificationSubject = Notificaiton Subject
+
+            templateRootPath = {$plugin.tx_agora.email.templateRootPath}
+            partialRootPath = {$plugin.tx_agora.email.partialRootPath}
+            layoutRootPath = {$plugin.tx_agora.email.layoutRootPath}
+        }
+
+        report {
+            sendMails = 1
+            defaultEmailAdress = email_adress@example.de
+            defaultEmailUserName = PostAdmin
+            notificationSubject = A new report in your forum
+        }
+
+        errorHandling {
+            # Possible: standaloneTemplate, pageNotFoundHandler
+            handling = standaloneTemplate
+            templatePath = EXT:agora/Resources/Private/Templates/ErrorHandling/TargetNotFound.html
+            statuscode = 404
+            redirectTo =
+        }
+
+
     }
 }
 
 page {
-	includeCSSLibs {
-	}
-	includeJSLibs {
-	}
-	includeJSFooterlibs {
-	}
+    includeCSSLibs {
+
+    }
+
+    includeJSLibs {
+
+    }
+
+    includeJSFooterlibs {
+
+    }
+}
+
+# Module configuration
+module.tx_agora < plugin.tx_agora
+module.tx_agora {
+    persistence {
+        storagePid = {$module.tx_agora.persistence.storagePid}
+    }
+
+    view {
+        templateRootPath = {$module.tx_agora.view.templateRootPath}
+        partialRootPath = {$module.tx_agora.view.partialRootPath}
+        layoutRootPath = {$module.tx_agora.view.layoutRootPath}
+    }
 }
 
 
- # Module configuration
-module.tx_agora {
-	persistence {
-		storagePid = {$module.tx_agora.persistence.storagePid}
-	}
-	view {
-		templateRootPath = {$module.tx_agora.view.templateRootPath}
-		partialRootPath = {$module.tx_agora.view.partialRootPath}
-		layoutRootPath = {$module.tx_agora.view.layoutRootPath}
-	}
+1513672176 = PAGE
+1513672176 {
+    typeNum = 1513672176
+    config {
+        tx_realurl_enable = 0
+        disableAllHeaderCode = 1
+        xhtml_cleaning = 0
+        admPanel = 0
+        additionalHeaders = Content-type: text/plain
+        no_cache = 1
+        debug = 0
+    }
+
+    10 = USER_INT
+    10 {
+        userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
+        vendorName = AgoraTeam
+        extensionName = Agora
+        pluginName = Ajax
+        controller = Rating
+        action = rate
+        switchableControllerActions {
+            Tag {
+                1 = autocomplete
+                2 = list
+            }
+            Rating {
+                1 = rate
+            }
+        }
+    }
 }
